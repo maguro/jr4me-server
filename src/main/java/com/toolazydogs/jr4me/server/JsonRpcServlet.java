@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jsonrpc4me.server;
+package com.toolazydogs.jr4me.server;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Predicate;
-import com.toolazydogs.jsonrpc4me.api.Param;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import static org.reflections.util.ClasspathHelper.forPackage;
@@ -38,6 +37,8 @@ import static org.reflections.util.FilterBuilder.prefix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.toolazydogs.jr4me.api.Param;
+
 
 /**
  *
@@ -45,7 +46,7 @@ import org.slf4j.LoggerFactory;
 public class JsonRpcServlet extends HttpServlet
 {
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonRpcServlet.class);
-    public static String PACKAGES = "com.toolazydogs.jsonrpc4me.packages";
+    public static String PACKAGES = "com.toolazydogs.jr4me.packages";
     private final Set<String> packages = new HashSet<String>();
     private final Map<String, Object> methods = new HashMap<String, Object>();
 
@@ -54,7 +55,7 @@ public class JsonRpcServlet extends HttpServlet
     {
         super.init(config);
 
-        Predicate<String> filter = new FilterBuilder.Include(prefix("com.toolazydogs.jsonrpc4me.api"));
+        Predicate<String> filter = new FilterBuilder.Include(prefix("com.toolazydogs.jr4me.api"));
         String pkgs = config.getInitParameter(PACKAGES);
         if (pkgs == null) throw new ServletException(PACKAGES + " not set");
         for (String pkg : pkgs.split(","))
@@ -66,13 +67,13 @@ public class JsonRpcServlet extends HttpServlet
                             .setScanners(new MethodAnnotationsScanner().filterResultsBy(filter))
             );
 
-            for (Method rpc : reflections.getMethodsAnnotatedWith(com.toolazydogs.jsonrpc4me.api.Method.class))
+            for (Method rpc : reflections.getMethodsAnnotatedWith(com.toolazydogs.jr4me.api.Method.class))
             {
-                com.toolazydogs.jsonrpc4me.api.Method ann = rpc.getAnnotation(com.toolazydogs.jsonrpc4me.api.Method.class);
+                com.toolazydogs.jr4me.api.Method ann = rpc.getAnnotation(com.toolazydogs.jr4me.api.Method.class);
                 System.err.println("rpc:" + rpc.getName() + ":" + ann.name());
                 for (int i = 0; i < rpc.getParameterTypes().length; i++)
                 {
-                    com.toolazydogs.jsonrpc4me.api.Param param = (Param)rpc.getParameterAnnotations()[i][0];
+                    com.toolazydogs.jr4me.api.Param param = (Param)rpc.getParameterAnnotations()[i][0];
                     System.err.println(param.name());
                 }
             }

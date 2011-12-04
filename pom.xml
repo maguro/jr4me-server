@@ -9,9 +9,9 @@
         <version>2</version>
     </parent>
 
-    <groupId>com.toolazydogs.jsonrpc4me</groupId>
+    <groupId>com.toolazydogs.jr4me</groupId>
     <artifactId>server</artifactId>
-    <name>JSON-RPC 4 me :: Server</name>
+    <name>JSON-RPC for me :: Server</name>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -32,7 +32,21 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.toolazydogs.jsonrpc4me</groupId>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.toolazydogs.jr4me</groupId>
             <artifactId>api</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
@@ -41,6 +55,18 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.2</version>
         </dependency>
 
         <dependency>
@@ -86,8 +112,8 @@
     </dependencies>
 
     <scm>
-        <connection>scm:git:git@github.com:maguro/jsonrpc4me-server.git</connection>
-        <url>scm:git:git@github.com:maguro/jsonrpc4me-server.git</url>
+        <connection>scm:git:git@github.com:maguro/jr4me-server.git</connection>
+        <url>scm:git:git@github.com:maguro/jr4me-server.git</url>
     </scm>
 
 </project>

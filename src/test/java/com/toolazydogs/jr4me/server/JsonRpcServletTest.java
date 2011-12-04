@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jsonrpc4me.server;
+package com.toolazydogs.jr4me.server;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
 
@@ -26,12 +25,16 @@ import org.testng.annotations.Test;
 
 
 /**
- * @author Alan D. Cabrera
+ *
  */
 public class JsonRpcServletTest
 {
     @Test
     public void test() throws Exception
+    {
+    }
+
+    public static void main(String... args) throws Exception
     {
         Server server = new Server(8080);
 
@@ -43,31 +46,16 @@ public class JsonRpcServletTest
         servletHolder.setInitParameter(JsonRpcServlet.PACKAGES, "com.acme.service");
         servletHolder.getRegistration().setLoadOnStartup(1);
 
-        try
+        Enumeration<URL> enumeration = JsonRpcServletTest.class.getClassLoader().getResources("org/livetribe/jmx/rest/web");
+        while (enumeration.hasMoreElements())
         {
-            Enumeration<URL> enumeration =  this.getClass().getClassLoader().getResources("org/livetribe/jmx/rest/web");
-            while (enumeration.hasMoreElements())
-            {
-                URL url = enumeration.nextElement();
-                System.err.println(url);
-            }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();  //Todo change body of catch statement use File | Settings | File Templates.
+            URL url = enumeration.nextElement();
+            System.err.println(url);
         }
 
         context.addServlet(servletHolder, "/ws/*");
 
-        try
-        {
-            server.start();
-            server.join();
-        }
-        catch (Exception e)
-        {
-            throw new IOException("Unable to start Jetty server", e);
-        }
+        server.start();
+        server.join();
     }
-
 }

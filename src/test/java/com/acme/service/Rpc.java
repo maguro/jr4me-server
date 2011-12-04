@@ -1,5 +1,5 @@
 /**
- * Copyright 2011 (C) Alan D. Cabrera
+ * Copyright 2011 (C) The original author or authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,28 @@
  */
 package com.acme.service;
 
-import com.toolazydogs.jsonrpc4me.api.Method;
-import com.toolazydogs.jsonrpc4me.api.Param;
+import com.acme.model.Car;
+import com.acme.model.Carriage;
+import com.acme.model.Vehicle;
+import org.codehaus.jackson.annotate.JsonSubTypes;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+
+import com.toolazydogs.jr4me.api.Method;
+import com.toolazydogs.jr4me.api.Param;
 
 
 /**
  *
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
+              include = JsonTypeInfo.As.PROPERTY,
+              property = "type")
+@JsonSubTypes({@JsonSubTypes.Type(value = Car.class, name = "car"),
+               @JsonSubTypes.Type(value = Carriage.class, name = "carriage")})
 public class Rpc
 {
     @Method(name = "foo")
-    public String fooMethod(@Param(name = "first") String param)
+    public String fooMethod(@Param(name = "name") String param, @Param(name = "vehicle") Vehicle vehicle)
     {
         return "BAR:" + param;
     }
