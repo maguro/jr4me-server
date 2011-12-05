@@ -20,7 +20,6 @@ import java.io.IOException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.DeserializationContext;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,28 +27,23 @@ import org.slf4j.LoggerFactory;
 /**
  *
  */
-public class JsonRpcParamDeserializerObject extends JsonRpcParamDeserializer
+public class ParamDeserializerInteger extends ParamDeserializer
 {
-    static final Logger LOG = LoggerFactory.getLogger(JsonRpcParamDeserializerObject.class);
-    private final Class<?> clazz;
+    static final Logger LOG = LoggerFactory.getLogger(ParamDeserializerInteger.class);
 
-    public JsonRpcParamDeserializerObject(String key, Class<?> clazz)
+    public ParamDeserializerInteger(String key)
     {
         super(key);
-        assert clazz != null;
-        this.clazz = clazz;
     }
 
     public Object deserialize(JsonParser parser, DeserializationContext context) throws IOException
     {
-        ObjectMapper mapper = (ObjectMapper)parser.getCodec();
-
         JsonToken token = parser.nextToken();
-        if (token != JsonToken.START_OBJECT) throw context.wrongTokenException(parser, token, "Expected object for JSON RPC parameter " + getKey());
+        if (token != JsonToken.VALUE_NUMBER_INT) throw context.wrongTokenException(parser, token, "Expected integer value for JSON RPC parameter " + getKey());
 
-        Object value = mapper.readValue(parser, clazz);
+        int value = parser.getIntValue();
 
-        LOG.trace("Adding {} of class {} to parameters", value, clazz);
+        LOG.trace("Adding {} to parameters", value);
 
         return value;
     }

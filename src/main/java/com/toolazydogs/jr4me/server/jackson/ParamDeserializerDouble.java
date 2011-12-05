@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 /**
  *
  */
-public class JsonRpcParamDeserializerString extends JsonRpcParamDeserializer
+public class ParamDeserializerDouble extends ParamDeserializer
 {
-    static final Logger LOG = LoggerFactory.getLogger(JsonRpcParamDeserializerString.class);
+    static final Logger LOG = LoggerFactory.getLogger(ParamDeserializerDouble.class);
 
-    public JsonRpcParamDeserializerString(String key)
+    public ParamDeserializerDouble(String key)
     {
         super(key);
     }
@@ -39,9 +39,9 @@ public class JsonRpcParamDeserializerString extends JsonRpcParamDeserializer
     public Object deserialize(JsonParser parser, DeserializationContext context) throws IOException
     {
         JsonToken token = parser.nextToken();
-        if (token != JsonToken.VALUE_STRING) throw context.wrongTokenException(parser, token, "Expected string value for JSON RPC parameter " + getKey());
+        if (token != JsonToken.VALUE_NUMBER_FLOAT) throw context.wrongTokenException(parser, token, "Expected double value for JSON RPC parameter " + getKey());
 
-        String value = parser.getText();
+        double value = parser.getDoubleValue();
 
         LOG.trace("Adding {} to parameters", value);
 

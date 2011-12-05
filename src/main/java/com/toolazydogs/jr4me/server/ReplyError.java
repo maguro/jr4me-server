@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jr4me.server.jackson;
+package com.toolazydogs.jr4me.server;
 
 
 import java.util.Map;
@@ -22,17 +22,17 @@ import java.util.Map;
 /**
  *
  */
-public class JsonRpcCallParamMap extends JsonRpcCall
+public class ReplyError extends Reply
 {
-    private Map<String, Object> params;
+    public Map<String, Object> result;
 
-    public Map<String, Object> getParams()
+    public Map<String, Object> getResult()
     {
-        return params;
+        return result;
     }
 
-    public void setParams(Map<String, Object> params)
+    public void setResult(Map<String, Object> result)
     {
-        this.params = params;
+        this.result = result;
     }
 }

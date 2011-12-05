@@ -26,7 +26,14 @@ import org.codehaus.jackson.map.module.SimpleModule;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.toolazydogs.jr4me.server.BatchCall;
+import com.toolazydogs.jr4me.server.Call;
+import com.toolazydogs.jr4me.server.CallParamArray;
+import com.toolazydogs.jr4me.server.CallParamMap;
 
 
 /**
@@ -34,25 +41,16 @@ import org.testng.annotations.Test;
  */
 public class JacksonTest
 {
+    ObjectMapper mapper;
+
     @Test
-    public void test() throws Exception
+    public void testParameterArray() throws Exception
     {
-        ObjectMapper mapper = new ObjectMapper();
-
-        mapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
-        mapper.getDeserializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
-        mapper.getSerializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
-
-        mapper.registerModule(new SimpleModule("JsonRpcModule", new Version(1, 0, 0, null))
-                                      .addDeserializer(JsonRpcCall.class, new JsonRpcDeserializer(new JsonRpcParamDeserializer[]{new JsonRpcParamDeserializerString("name"),
-                                                                                                                                 new JsonRpcParamDeserializerObject("vehicle", Vehicle.class)}))
-                                      .addDeserializer(JsonRpcBatchCall.class, new JsonRpcBatchCallDeserializer()));
-
-        JsonRpcBatchCall calls = mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [\"george\",  {\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}], \"id\": 1}", JsonRpcBatchCall.class);
+        BatchCall calls = mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [\"george\",  {\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}], \"id\": 1}", BatchCall.class);
         assertNotNull(calls);
         assertEquals(calls.getCalls().length, 1);
 
-        JsonRpcCallParamArray arrayCall = (JsonRpcCallParamArray)calls.getCalls()[0];
+        CallParamArray arrayCall = (CallParamArray)calls.getCalls()[0];
         assertNotNull(arrayCall);
         assertEquals(arrayCall.getJsonrpc(), "2.0");
         assertEquals(arrayCall.getMethod(), "subtract");
@@ -63,12 +61,16 @@ public class JacksonTest
         assertEquals(arrayCall.getParams()[1], new Car("speedy", "BMW", "M3"));
 
         System.out.println(mapper.writeValueAsString(calls));
+    }
 
-        calls = mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"name\":\"george\",  \"vehicle\":{\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}}, \"id\": 1}", JsonRpcBatchCall.class);
+    @Test
+    public void testParameterMap() throws Exception
+    {
+        BatchCall calls = mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"name\":\"george\",  \"vehicle\":{\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}}, \"id\": 1}", BatchCall.class);
         assertNotNull(calls);
         assertEquals(calls.getCalls().length, 1);
 
-        JsonRpcCallParamMap mapCall = (JsonRpcCallParamMap)calls.getCalls()[0];
+        CallParamMap mapCall = (CallParamMap)calls.getCalls()[0];
         assertNotNull(mapCall);
         assertEquals(mapCall.getJsonrpc(), "2.0");
         assertEquals(mapCall.getMethod(), "subtract");
@@ -79,15 +81,19 @@ public class JacksonTest
         assertEquals(mapCall.getParams().get("vehicle"), new Car("speedy", "BMW", "M3"));
 
         System.out.println(mapper.writeValueAsString(calls));
+    }
 
-        calls = mapper.readValue("[" +
-                                 "{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [\"george\",  {\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}], \"id\": 1}," +
-                                 "{\"jsonrpc\": \"2.0\", \"method\": \"add\", \"params\": {\"name\":\"gracie\",  \"vehicle\":{\"type\":\"car\",\"name\":\"scoot\",\"make\":\"Mini\", \"model\":\"Cooper\"}}, \"id\": 2}" +
-                                 "]", JsonRpcBatchCall.class);
+    @Test
+    public void testBatchCalls() throws Exception
+    {
+        BatchCall calls = mapper.readValue("[" +
+                                                  "{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [\"george\",  {\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}], \"id\": 1}," +
+                                                  "{\"jsonrpc\": \"2.0\", \"method\": \"add\", \"params\": {\"name\":\"gracie\",  \"vehicle\":{\"type\":\"car\",\"name\":\"scoot\",\"make\":\"Mini\", \"model\":\"Cooper\"}}, \"id\": 2}" +
+                                                  "]", BatchCall.class);
         assertNotNull(calls);
         assertEquals(calls.getCalls().length, 2);
 
-        arrayCall = (JsonRpcCallParamArray)calls.getCalls()[0];
+        CallParamArray arrayCall = (CallParamArray)calls.getCalls()[0];
         assertNotNull(arrayCall);
         assertEquals(arrayCall.getJsonrpc(), "2.0");
         assertEquals(arrayCall.getMethod(), "subtract");
@@ -98,7 +104,7 @@ public class JacksonTest
         assertEquals(arrayCall.getParams()[1], new Car("speedy", "BMW", "M3"));
         System.out.println(mapper.writeValueAsString(calls));
 
-        mapCall = (JsonRpcCallParamMap)calls.getCalls()[1];
+        CallParamMap mapCall = (CallParamMap)calls.getCalls()[1];
         assertNotNull(mapCall);
         assertEquals(mapCall.getJsonrpc(), "2.0");
         assertEquals(mapCall.getMethod(), "add");
@@ -107,10 +113,14 @@ public class JacksonTest
         assertEquals(mapCall.getParams().size(), 2);
         assertEquals(mapCall.getParams().get("name"), "gracie");
         assertEquals(mapCall.getParams().get("vehicle"), new Car("scoot", "Mini", "Cooper"));
+    }
 
+    @Test
+    public void testBadCalls() throws Exception
+    {
         try
         {
-            mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"foo\" : \"bar\", \"name\":\"george\",  \"vehicle\":{\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}}, \"id\": 1}", JsonRpcBatchCall.class);
+            mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"foo\" : \"bar\", \"name\":\"george\",  \"vehicle\":{\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}}, \"id\": 1}", BatchCall.class);
             fail("Bad JSON object w/ extraneous parameter foo");
         }
         catch (IOException ignored)
@@ -121,7 +131,7 @@ public class JacksonTest
 
         try
         {
-            mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"vehicle\":{\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}}, \"id\": 1}", JsonRpcBatchCall.class);
+            mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"vehicle\":{\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}}, \"id\": 1}", BatchCall.class);
             fail("Bad JSON object w/ missing parameter name");
         }
         catch (IOException ignored)
@@ -132,13 +142,36 @@ public class JacksonTest
 
         try
         {
-            mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [\"george\"], \"id\": 1}", JsonRpcBatchCall.class);
+            mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [\"george\"], \"id\": 1}", BatchCall.class);
             fail("Bad JSON object w/ too little parameters");
         }
         catch (IOException ignored)
         {
             System.out.println(ignored);
         }
+    }
+
+    @BeforeClass
+    public void beforeClass() throws Exception
+    {
+        mapper = new ObjectMapper();
+
+        mapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
+        mapper.getDeserializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
+        mapper.getSerializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
+        MethodParametersDeserializer s = new MethodParametersDeserializer("subtract", new ParamDeserializer[]{new ParamDeserializerString("name"),
+                                                                                                                                   new ParamDeserializerObject("vehicle", Vehicle.class)});
+        MethodParametersDeserializer a = new MethodParametersDeserializer("add", new ParamDeserializer[]{new ParamDeserializerString("name"),
+                                                                                                                              new ParamDeserializerObject("vehicle", Vehicle.class)});
+
+        mapper.registerModule(new SimpleModule("JsonRpcModule", new Version(1, 0, 0, null))
+                                      .addDeserializer(Call.class, new Deserializer(new MethodParametersDeserializer[]{s, a}))
+                                      .addDeserializer(BatchCall.class, new BatchCallDeserializer()));
+    }
+
+    @AfterTest
+    public void afterTest()
+    {
         System.out.flush();
     }
 }

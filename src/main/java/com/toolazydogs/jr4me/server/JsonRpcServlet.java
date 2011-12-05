@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Predicate;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import static org.reflections.util.ClasspathHelper.forPackage;
@@ -38,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.toolazydogs.jr4me.api.Param;
+import com.toolazydogs.jr4me.server.jackson.CamelCaseNamingStrategy;
 
 
 /**
@@ -47,6 +49,7 @@ public class JsonRpcServlet extends HttpServlet
 {
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonRpcServlet.class);
     public static String PACKAGES = "com.toolazydogs.jr4me.packages";
+    private final ObjectMapper mapper = new ObjectMapper();
     private final Set<String> packages = new HashSet<String>();
     private final Map<String, Object> methods = new HashMap<String, Object>();
 
@@ -54,6 +57,8 @@ public class JsonRpcServlet extends HttpServlet
     public void init(ServletConfig config) throws ServletException
     {
         super.init(config);
+
+        mapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
 
         Predicate<String> filter = new FilterBuilder.Include(prefix("com.toolazydogs.jr4me.api"));
         String pkgs = config.getInitParameter(PACKAGES);
@@ -84,5 +89,6 @@ public class JsonRpcServlet extends HttpServlet
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
     {
+        BatchCall call = mapper.readValue(req.getInputStream(), BatchCall.class);
     }
 }

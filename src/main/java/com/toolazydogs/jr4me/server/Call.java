@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jr4me.server.jackson;
+package com.toolazydogs.jr4me.server;
 
 
 /**
  *
  */
-public abstract class JsonRpcCall
+public abstract class Call
 {
     public static final int NOT_SET = -1;
     private String jsonrpc;

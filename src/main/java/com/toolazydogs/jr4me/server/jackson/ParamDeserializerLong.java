@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 /**
  *
  */
-public class JsonRpcParamDeserializerLong extends JsonRpcParamDeserializer
+public class ParamDeserializerLong extends ParamDeserializer
 {
-    static final Logger LOG = LoggerFactory.getLogger(JsonRpcParamDeserializerLong.class);
+    static final Logger LOG = LoggerFactory.getLogger(ParamDeserializerLong.class);
 
-    public JsonRpcParamDeserializerLong(String key)
+    public ParamDeserializerLong(String key)
     {
         super(key);
     }

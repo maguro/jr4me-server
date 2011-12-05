@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jr4me.server.jackson;
+package com.toolazydogs.jr4me.server;
 
 /**
  *
  */
-public class JsonRpcCallParamArray extends JsonRpcCall
+public class BatchCall
 {
-    private Object[] params;
+    private Call[] calls;
 
-    public Object[] getParams()
+    public Call[] getCalls()
     {
-        return params;
+        return calls;
     }
 
-    public void setParams(Object[] params)
+    public void setCalls(Call[] calls)
     {
-        this.params = params;
+        this.calls = calls;
     }
 }

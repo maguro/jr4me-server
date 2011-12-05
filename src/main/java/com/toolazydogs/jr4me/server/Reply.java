@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jr4me.server.jackson;
+package com.toolazydogs.jr4me.server;
 
 /**
  *
  */
-public class JsonRpcReply
+public class Reply
 {
     private final String jsonrpc = "2.0";
     public int id;

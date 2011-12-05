@@ -20,6 +20,7 @@ import java.io.IOException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.DeserializationContext;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,23 +28,28 @@ import org.slf4j.LoggerFactory;
 /**
  *
  */
-public class JsonRpcParamDeserializerDouble extends JsonRpcParamDeserializer
+public class ParamDeserializerObject extends ParamDeserializer
 {
-    static final Logger LOG = LoggerFactory.getLogger(JsonRpcParamDeserializerDouble.class);
+    static final Logger LOG = LoggerFactory.getLogger(ParamDeserializerObject.class);
+    private final Class<?> clazz;
 
-    public JsonRpcParamDeserializerDouble(String key)
+    public ParamDeserializerObject(String key, Class<?> clazz)
     {
         super(key);
+        assert clazz != null;
+        this.clazz = clazz;
     }
 
     public Object deserialize(JsonParser parser, DeserializationContext context) throws IOException
     {
+        ObjectMapper mapper = (ObjectMapper)parser.getCodec();
+
         JsonToken token = parser.nextToken();
-        if (token != JsonToken.VALUE_NUMBER_FLOAT) throw context.wrongTokenException(parser, token, "Expected double value for JSON RPC parameter " + getKey());
+        if (token != JsonToken.START_OBJECT) throw context.wrongTokenException(parser, token, "Expected object for JSON RPC parameter " + getKey());
 
-        double value = parser.getDoubleValue();
+        Object value = mapper.readValue(parser, clazz);
 
-        LOG.trace("Adding {} to parameters", value);
+        LOG.trace("Adding {} of class {} to parameters", value, clazz);
 
         return value;
     }

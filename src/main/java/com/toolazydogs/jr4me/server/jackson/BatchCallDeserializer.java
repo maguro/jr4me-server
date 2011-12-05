@@ -28,43 +28,48 @@ import org.codehaus.jackson.map.deser.std.StdDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.toolazydogs.jr4me.server.BatchCall;
+import com.toolazydogs.jr4me.server.Call;
+import com.toolazydogs.jr4me.server.CallParamArray;
+
 
 /**
  *
  */
-public class JsonRpcBatchCallDeserializer extends StdDeserializer<JsonRpcBatchCall>
+public class BatchCallDeserializer extends StdDeserializer<BatchCall>
 {
-    static final Logger LOG = LoggerFactory.getLogger(JsonRpcBatchCall.class);
+    static final Logger LOG = LoggerFactory.getLogger(BatchCall.class);
 
-    public JsonRpcBatchCallDeserializer()
+    public BatchCallDeserializer()
     {
-        super(JsonRpcCallParamArray.class);
+        super(CallParamArray.class);
     }
 
     @Override
-    public JsonRpcBatchCall deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException
+    public BatchCall deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException
     {
         ObjectMapper mapper = (ObjectMapper)parser.getCodec();
-        JsonRpcBatchCall batch = new JsonRpcBatchCall();
-        List<JsonRpcCall> calls = new ArrayList<JsonRpcCall>();
+        BatchCall batch = new BatchCall();
+        List<Call> calls = new ArrayList<Call>();
 
         JsonToken token = parser.getCurrentToken();
         if (token == JsonToken.START_OBJECT)
         {
-            calls.add(mapper.readValue(parser, JsonRpcCall.class));
+            LOG.trace("Found single call");
+            calls.add(mapper.readValue(parser, Call.class));
         }
         else if (token == JsonToken.START_ARRAY)
         {
+            LOG.trace("Found batch of calls");
             token = parser.nextToken();
             while (token != JsonToken.END_ARRAY)
             {
-                calls.add(mapper.readValue(parser, JsonRpcCall.class));
+                calls.add(mapper.readValue(parser, Call.class));
                 token = parser.nextToken();
             }
-
         }
 
-        batch.setCalls(calls.toArray(new JsonRpcCall[calls.size()]));
+        batch.setCalls(calls.toArray(new Call[calls.size()]));
 
         return batch;
     }

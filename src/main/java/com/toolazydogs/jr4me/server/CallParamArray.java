@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jr4me.server.jackson;
-
+package com.toolazydogs.jr4me.server;
 
 /**
  *
  */
-public class JsonRpcReplyResult extends JsonRpcReply
+public class CallParamArray extends Call
 {
-    public Object result;
+    private Object[] params;
 
-    public Object getResult()
+    public Object[] getParams()
     {
-        return result;
+        return params;
     }
 
-    public void setResult(Object result)
+    public void setParams(Object[] params)
     {
-        this.result = result;
+        this.params = params;
     }
 }

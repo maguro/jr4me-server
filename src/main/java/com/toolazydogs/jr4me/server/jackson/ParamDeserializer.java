@@ -24,11 +24,11 @@ import org.codehaus.jackson.map.DeserializationContext;
 /**
  *
  */
-public abstract class JsonRpcParamDeserializer
+public abstract class ParamDeserializer
 {
     private final String key;
 
-    public JsonRpcParamDeserializer(String key)
+    public ParamDeserializer(String key)
     {
         assert key != null;
         this.key = key;

@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jr4me.server.jackson;
-
-
-import java.util.Map;
+package com.toolazydogs.jr4me.server;
 
 
 /**
  *
  */
-public class JsonRpcReplyError extends JsonRpcReply
+public class ReplyResult extends Reply
 {
-    public Map<String, Object> result;
+    public Object result;
 
-    public Map<String, Object> getResult()
+    public Object getResult()
     {
         return result;
     }
 
-    public void setResult(Map<String, Object> result)
+    public void setResult(Object result)
     {
         this.result = result;
     }

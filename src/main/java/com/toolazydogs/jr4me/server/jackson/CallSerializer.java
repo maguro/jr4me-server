@@ -24,19 +24,21 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
+import com.toolazydogs.jr4me.server.Call;
+
 
 /**
  *
  */
-public class JsonRpcSerializer extends SerializerBase<JsonRpcCall>
+public class CallSerializer extends SerializerBase<Call>
 {
-    public JsonRpcSerializer()
+    public CallSerializer()
     {
-        super(JsonRpcCall.class);
+        super(Call.class);
     }
 
     @Override
-    public void serialize(JsonRpcCall value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException
+    public void serialize(Call value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException
     {
         jgen.writeStartObject();
 

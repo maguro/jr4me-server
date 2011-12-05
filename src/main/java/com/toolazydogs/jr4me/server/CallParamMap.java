@@ -13,22 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jr4me.server.jackson;
+package com.toolazydogs.jr4me.server;
+
+
+import java.util.Map;
+
 
 /**
  *
  */
-public class JsonRpcBatchCall
+public class CallParamMap extends Call
 {
-    private JsonRpcCall[] calls;
+    private Map<String, Object> params;
 
-    public JsonRpcCall[] getCalls()
+    public Map<String, Object> getParams()
     {
-        return calls;
+        return params;
     }
 
-    public void setCalls(JsonRpcCall[] calls)
+    public void setParams(Map<String, Object> params)
     {
-        this.calls = calls;
+        this.params = params;
     }
 }
