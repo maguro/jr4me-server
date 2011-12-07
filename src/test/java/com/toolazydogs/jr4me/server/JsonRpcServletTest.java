@@ -15,12 +15,21 @@
  */
 package com.toolazydogs.jr4me.server;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.testng.annotations.Test;
 
 
@@ -32,6 +41,25 @@ public class JsonRpcServletTest
     @Test
     public void test() throws Exception
     {
+        JsonRpcServlet servlet = new JsonRpcServlet();
+        ServletConfig config = mock(ServletConfig.class);
+
+        when(config.getInitParameter(JsonRpcServlet.PACKAGES)).thenReturn("com.acme.service");
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getInputStream()).thenReturn(new ServletInputStream()
+        {
+            InputStream in = new ByteArrayInputStream("{\"jsonrpc\": \"2.0\", \"method\": \"foo\", \"params\": [\"george\",  {\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}], \"id\": 1}".getBytes());
+
+            @Override
+            public int read() throws IOException
+            {
+                return in.read();
+            }
+        });
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+
+        servlet.init(config);
+        servlet.doPost(req, resp);
     }
 
     public static void main(String... args) throws Exception

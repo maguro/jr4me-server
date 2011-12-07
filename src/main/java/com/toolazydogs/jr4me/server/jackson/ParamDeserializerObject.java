@@ -33,21 +33,19 @@ public class ParamDeserializerObject extends ParamDeserializer
     static final Logger LOG = LoggerFactory.getLogger(ParamDeserializerObject.class);
     private final Class<?> clazz;
 
-    public ParamDeserializerObject(String key, Class<?> clazz)
+    public ParamDeserializerObject(String key, Class<?> clazz, ObjectMapper mapper)
     {
-        super(key);
+        super(key, mapper);
         assert clazz != null;
         this.clazz = clazz;
     }
 
     public Object deserialize(JsonParser parser, DeserializationContext context) throws IOException
     {
-        ObjectMapper mapper = (ObjectMapper)parser.getCodec();
-
         JsonToken token = parser.nextToken();
         if (token != JsonToken.START_OBJECT) throw context.wrongTokenException(parser, token, "Expected object for JSON RPC parameter " + getKey());
 
-        Object value = mapper.readValue(parser, clazz);
+        Object value = getMapper().readValue(parser, clazz);
 
         LOG.trace("Adding {} of class {} to parameters", value, clazz);
 

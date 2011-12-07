@@ -87,9 +87,9 @@ public class JacksonTest
     public void testBatchCalls() throws Exception
     {
         BatchCall calls = mapper.readValue("[" +
-                                                  "{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [\"george\",  {\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}], \"id\": 1}," +
-                                                  "{\"jsonrpc\": \"2.0\", \"method\": \"add\", \"params\": {\"name\":\"gracie\",  \"vehicle\":{\"type\":\"car\",\"name\":\"scoot\",\"make\":\"Mini\", \"model\":\"Cooper\"}}, \"id\": 2}" +
-                                                  "]", BatchCall.class);
+                                           "{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [\"george\",  {\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}], \"id\": 1}," +
+                                           "{\"jsonrpc\": \"2.0\", \"method\": \"add\", \"params\": {\"name\":\"gracie\",  \"vehicle\":{\"type\":\"car\",\"name\":\"scoot\",\"make\":\"Mini\", \"model\":\"Cooper\"}}, \"id\": 2}" +
+                                           "]", BatchCall.class);
         assertNotNull(calls);
         assertEquals(calls.getCalls().length, 2);
 
@@ -102,7 +102,6 @@ public class JacksonTest
         assertEquals(arrayCall.getParams().length, 2);
         assertEquals(arrayCall.getParams()[0], "george");
         assertEquals(arrayCall.getParams()[1], new Car("speedy", "BMW", "M3"));
-        System.out.println(mapper.writeValueAsString(calls));
 
         CallParamMap mapCall = (CallParamMap)calls.getCalls()[1];
         assertNotNull(mapCall);
@@ -113,6 +112,8 @@ public class JacksonTest
         assertEquals(mapCall.getParams().size(), 2);
         assertEquals(mapCall.getParams().get("name"), "gracie");
         assertEquals(mapCall.getParams().get("vehicle"), new Car("scoot", "Mini", "Cooper"));
+
+        System.out.println(mapper.writeValueAsString(calls));
     }
 
     @Test
@@ -155,14 +156,16 @@ public class JacksonTest
     public void beforeClass() throws Exception
     {
         mapper = new ObjectMapper();
-
         mapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
-        mapper.getDeserializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
-        mapper.getSerializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
-        MethodParametersDeserializer s = new MethodParametersDeserializer("subtract", new ParamDeserializer[]{new ParamDeserializerString("name"),
-                                                                                                                                   new ParamDeserializerObject("vehicle", Vehicle.class)});
-        MethodParametersDeserializer a = new MethodParametersDeserializer("add", new ParamDeserializer[]{new ParamDeserializerString("name"),
-                                                                                                                              new ParamDeserializerObject("vehicle", Vehicle.class)});
+
+        ObjectMapper methodMapper = new ObjectMapper();
+        methodMapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
+        methodMapper.getDeserializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
+        methodMapper.getSerializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
+        MethodParametersDeserializer s = new MethodParametersDeserializer("subtract", new ParamDeserializer[]{new ParamDeserializerString("name", methodMapper),
+                                                                                                              new ParamDeserializerObject("vehicle", Vehicle.class, methodMapper)});
+        MethodParametersDeserializer a = new MethodParametersDeserializer("add", new ParamDeserializer[]{new ParamDeserializerString("name", methodMapper),
+                                                                                                         new ParamDeserializerObject("vehicle", Vehicle.class, methodMapper)});
 
         mapper.registerModule(new SimpleModule("JsonRpcModule", new Version(1, 0, 0, null))
                                       .addDeserializer(Call.class, new Deserializer(new MethodParametersDeserializer[]{s, a}))

@@ -20,6 +20,7 @@ import java.io.IOException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.DeserializationContext;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +32,9 @@ public class ParamDeserializerFloat extends ParamDeserializer
 {
     static final Logger LOG = LoggerFactory.getLogger(ParamDeserializerFloat.class);
 
-    public ParamDeserializerFloat(String key)
+    public ParamDeserializerFloat(String key, ObjectMapper mapper)
     {
-        super(key);
+        super(key, mapper);
     }
 
     public Object deserialize(JsonParser parser, DeserializationContext context) throws IOException

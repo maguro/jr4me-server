@@ -21,14 +21,19 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Predicate;
+import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.module.SimpleModule;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import static org.reflections.util.ClasspathHelper.forPackage;
@@ -39,7 +44,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.toolazydogs.jr4me.api.Param;
+import com.toolazydogs.jr4me.server.jackson.BatchCallDeserializer;
 import com.toolazydogs.jr4me.server.jackson.CamelCaseNamingStrategy;
+import com.toolazydogs.jr4me.server.jackson.Deserializer;
+import com.toolazydogs.jr4me.server.jackson.JacksonUtils;
+import com.toolazydogs.jr4me.server.jackson.MethodParametersDeserializer;
+import com.toolazydogs.jr4me.server.jackson.ParamDeserializer;
 
 
 /**
@@ -60,6 +70,7 @@ public class JsonRpcServlet extends HttpServlet
 
         mapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
 
+        List<MethodParametersDeserializer> deserializers = new ArrayList<MethodParametersDeserializer>();
         Predicate<String> filter = new FilterBuilder.Include(prefix("com.toolazydogs.jr4me.api"));
         String pkgs = config.getInitParameter(PACKAGES);
         if (pkgs == null) throw new ServletException(PACKAGES + " not set");
@@ -72,23 +83,46 @@ public class JsonRpcServlet extends HttpServlet
                             .setScanners(new MethodAnnotationsScanner().filterResultsBy(filter))
             );
 
-            for (Method rpc : reflections.getMethodsAnnotatedWith(com.toolazydogs.jr4me.api.Method.class))
+            for (Method method : reflections.getMethodsAnnotatedWith(com.toolazydogs.jr4me.api.Method.class))
             {
-                com.toolazydogs.jr4me.api.Method ann = rpc.getAnnotation(com.toolazydogs.jr4me.api.Method.class);
-                System.err.println("rpc:" + rpc.getName() + ":" + ann.name());
-                for (int i = 0; i < rpc.getParameterTypes().length; i++)
+                Class<?> declaringClass = method.getDeclaringClass();
+                com.toolazydogs.jr4me.api.Method ann = method.getAnnotation(com.toolazydogs.jr4me.api.Method.class);
+                ObjectMapper methodMapper = new ObjectMapper();
+                methodMapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
+
+                List<ParamDeserializer> paramDeserializers = new ArrayList<ParamDeserializer>();
+                for (int i = 0; i < method.getParameterTypes().length; i++)
                 {
-                    com.toolazydogs.jr4me.api.Param param = (Param)rpc.getParameterAnnotations()[i][0];
-                    System.err.println(param.name());
+                    Class<?> parameterType = method.getParameterTypes()[i];
+                    for (Annotation annotation : method.getParameterAnnotations()[i])
+                    {
+                        if (annotation instanceof com.toolazydogs.jr4me.api.Param)
+                        {
+                            com.toolazydogs.jr4me.api.Param param = (Param)annotation;
+                            methodMapper.getDeserializationConfig().addMixInAnnotations(parameterType, declaringClass);
+                            methodMapper.getSerializationConfig().addMixInAnnotations(parameterType, declaringClass);
+
+                            paramDeserializers.add(JacksonUtils.createDeserializer(param.name(), parameterType, methodMapper));
+                        }
+                    }
                 }
+                deserializers.add(new MethodParametersDeserializer(ann.name(), paramDeserializers.toArray(new ParamDeserializer[paramDeserializers.size()])));
             }
             packages.add(pkg.trim());
         }
+
+        mapper.registerModule(new SimpleModule("JsonRpcModule", new Version(1, 0, 0, null))
+                                      .addDeserializer(Call.class, new Deserializer(deserializers.toArray(new MethodParametersDeserializer[deserializers.size()])))
+                                      .addDeserializer(BatchCall.class, new BatchCallDeserializer()));
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
     {
-        BatchCall call = mapper.readValue(req.getInputStream(), BatchCall.class);
+        BatchCall batchCall = mapper.readValue(req.getInputStream(), BatchCall.class);
+        for (Call call : batchCall.getCalls())
+        {
+
+        }
     }
 }

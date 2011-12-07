@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.DeserializationContext;
+import org.codehaus.jackson.map.ObjectMapper;
 
 
 /**
@@ -27,16 +28,25 @@ import org.codehaus.jackson.map.DeserializationContext;
 public abstract class ParamDeserializer
 {
     private final String key;
+    private final ObjectMapper mapper;
 
-    public ParamDeserializer(String key)
+    public ParamDeserializer(String key, ObjectMapper mapper)
     {
         assert key != null;
+        assert mapper != null;
+
         this.key = key;
+        this.mapper = mapper;
     }
 
     public String getKey()
     {
         return key;
+    }
+
+    public ObjectMapper getMapper()
+    {
+        return mapper;
     }
 
     public abstract Object deserialize(JsonParser parser, DeserializationContext context) throws IOException;
