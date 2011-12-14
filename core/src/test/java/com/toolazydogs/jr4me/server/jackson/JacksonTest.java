@@ -17,7 +17,7 @@ package com.toolazydogs.jr4me.server.jackson;
 
 import com.acme.pojo.Car;
 import com.acme.pojo.Vehicle;
-import com.acme.service.Rpc;
+import com.acme.svc.Rpc;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.JsonMappingException;

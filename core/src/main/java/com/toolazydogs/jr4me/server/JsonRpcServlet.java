@@ -27,10 +27,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.base.Predicate;
 import org.codehaus.jackson.Version;
@@ -85,7 +83,6 @@ public class JsonRpcServlet extends HttpServlet
         String pkgs = config.getInitParameter(PACKAGES);
         if (pkgs == null) throw new ServletException(PACKAGES + " not set");
 
-        Set<Class<?>> declaringClassSet = new HashSet<Class<?>>();
         for (String pkg : pkgs.split(","))
         {
             pkg = pkg.trim();
@@ -102,12 +99,14 @@ public class JsonRpcServlet extends HttpServlet
                 ObjectMapper methodMapper = new ObjectMapper();
                 methodMapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
 
-                declaringClassSet.add(declaringClass);
+                LOGGER.trace("Found annotated method {}", method.toString());
 
                 List<ParamDeserializer> paramDeserializers = new ArrayList<ParamDeserializer>();
+                List<String> names = new ArrayList<String>();
                 for (int i = 0; i < method.getParameterTypes().length; i++)
                 {
                     Class<?> parameterType = method.getParameterTypes()[i];
+                    String name = null;
                     for (Annotation annotation : method.getParameterAnnotations()[i])
                     {
                         if (annotation instanceof com.toolazydogs.jr4me.api.Param)
@@ -117,14 +116,23 @@ public class JsonRpcServlet extends HttpServlet
                             methodMapper.getSerializationConfig().addMixInAnnotations(parameterType, declaringClass);
 
                             paramDeserializers.add(JacksonUtils.createDeserializer(param.name(), parameterType, methodMapper));
+                            name = param.name();
                         }
+                    }
+                    if (name != null)
+                    {
+                        names.add(name);
+                    }
+                    else
+                    {
+                        throw new ServletException("Missing Param annotation");
                     }
                 }
 
                 deserializers.add(new MethodParametersDeserializer(ann.name(), paramDeserializers.toArray(new ParamDeserializer[paramDeserializers.size()])));
                 mapper.getSerializationConfig().addMixInAnnotations(method.getReturnType(), declaringClass);
 
-                methods.put(ann.name(), new Dispatcher(declaringClass, method));
+                methods.put(ann.name(), new Dispatcher(declaringClass, method, names));
             }
         }
 
@@ -140,6 +148,9 @@ public class JsonRpcServlet extends HttpServlet
         try
         {
             BatchCall batchCall = mapper.readValue(request.getInputStream(), BatchCall.class);
+
+            LOGGER.trace("Received {} calls", batchCall.getCalls().length);
+
             for (Call c : batchCall.getCalls())
             {
                 try

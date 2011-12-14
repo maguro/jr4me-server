@@ -20,6 +20,8 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -39,34 +41,28 @@ public class Dispatcher
     static final Logger LOG = LoggerFactory.getLogger(Dispatcher.class);
     private final Class<?> declaringClass;
     private final Method method;
+    private final List<String> names;
 
-    public Dispatcher(Class<?> declaringClass, Method method)
+    public Dispatcher(Class<?> declaringClass, Method method, List<String> names)
     {
         this.declaringClass = declaringClass;
         this.method = method;
+        this.names = names;
     }
 
     public Reply call(Object[] params, int id, BeanManager beanManager)
     {
         try
         {
-//            AnnotatedType at = beanManager.createAnnotatedType(declaringClass);
-//            //use this to create the class and inject dependencies
-//            final InjectionTarget it = beanManager.createInjectionTarget(at);
-//            DispatcherBean dispatcherBean = new DispatcherBean(declaringClass, it);
-//            CreationalContext context = beanManager.createCreationalContext(dispatcherBean);
-//            Object object = null;
-//            if (context != null)
-//            {
-//                object = beanManager.getReference(dispatcherBean, declaringClass, context);
-//            }
-
             Object object = getContextualInstance(beanManager, declaringClass);
-            Object o2 = getContextualInstance(beanManager, declaringClass);
             Object response = method.invoke(object, params);
             return new ReplyResult(response, id);
         }
         catch (IllegalAccessException e)
+        {
+            return new ReplyError(ErrorCodes.METHOD_INSTANTIATION_ERROR, id);
+        }
+        catch (InstantiationException e)
         {
             return new ReplyError(ErrorCodes.METHOD_INSTANTIATION_ERROR, id);
         }
@@ -76,22 +72,52 @@ public class Dispatcher
         }
     }
 
-    public ReplyResult call(Map<String, Object> params, int id, BeanManager beanManager)
+    public Reply call(Map<String, Object> params, int id, BeanManager beanManager)
     {
-        return new ReplyResult("HELLO MAP", id);  //Todo change body of created methods use File | Settings | File Templates.
+        List<Object> list = new ArrayList<Object>(names.size());
+        for (String name : names)
+        {
+            list.add(params.get(name));
+        }
+
+        try
+        {
+            Object object = getContextualInstance(beanManager, declaringClass);
+            Object response = method.invoke(object, list.toArray());
+            return new ReplyResult(response, id);
+        }
+        catch (IllegalAccessException e)
+        {
+            return new ReplyError(ErrorCodes.METHOD_INSTANTIATION_ERROR, id);
+        }
+        catch (InstantiationException e)
+        {
+            return new ReplyError(ErrorCodes.METHOD_INSTANTIATION_ERROR, id);
+        }
+        catch (InvocationTargetException e)
+        {
+            return new ReplyError(ErrorCodes.METHOD_INVOCATION_ERROR, id);
+        }
     }
 
-    public static <T> T getContextualInstance(final BeanManager manager, final Class<T> type)
+    public static Object getContextualInstance(final BeanManager manager, final Class type) throws IllegalAccessException, InstantiationException
     {
-        T result = null;
-        Bean<T> bean = (Bean<T>)manager.resolve(manager.getBeans(type));
-        if (bean != null)
+        Object result = null;
+        if (manager != null)
         {
-            CreationalContext<T> context = manager.createCreationalContext(bean);
-            if (context != null)
+            Bean bean = manager.resolve(manager.getBeans(type));
+            if (bean != null)
             {
-                result = (T)manager.getReference(bean, type, context);
+                CreationalContext context = manager.createCreationalContext(bean);
+                if (context != null)
+                {
+                    result = manager.getReference(bean, type, context);
+                }
             }
+        }
+        else
+        {
+            result = type.newInstance();
         }
         return result;
     }

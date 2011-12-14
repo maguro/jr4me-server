@@ -36,7 +36,7 @@ import org.testng.annotations.Test;
 public class JsonRpcServletTest
 {
     @Test
-    public void test() throws Exception
+    public void testParamsArray() throws Exception
     {
         JsonRpcServlet servlet = new JsonRpcServlet();
         ServletConfig config = mock(ServletConfig.class);
@@ -46,6 +46,40 @@ public class JsonRpcServletTest
         when(request.getInputStream()).thenReturn(new ServletInputStream()
         {
             InputStream in = new ByteArrayInputStream("{\"jsonrpc\": \"2.0\", \"method\": \"register\", \"params\": [\"george\",  {\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}], \"id\": 1}".getBytes());
+
+            @Override
+            public int read() throws IOException
+            {
+                return in.read();
+            }
+        });
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        when(response.getOutputStream()).thenReturn(new ServletOutputStream()
+        {
+            @Override
+            public void write(int b) throws IOException
+            {
+                out.write(b);
+            }
+        });
+
+        servlet.init(config);
+        servlet.doPost(request, response);
+        System.out.println(out.toString());
+    }
+
+    @Test
+    public void testParamsMap() throws Exception
+    {
+        JsonRpcServlet servlet = new JsonRpcServlet();
+        ServletConfig config = mock(ServletConfig.class);
+
+        when(config.getInitParameter(JsonRpcServlet.PACKAGES)).thenReturn("com.acme.service");
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getInputStream()).thenReturn(new ServletInputStream()
+        {
+            InputStream in = new ByteArrayInputStream("{\"jsonrpc\": \"2.0\", \"method\": \"register\", \"params\": {\"name\": \"george\",  \"vehicle\": {\"type\":\"car\",\"name\":\"speedy\",\"make\":\"BMW\", \"model\":\"M3\"}}, \"id\": 1}".getBytes());
 
             @Override
             public int read() throws IOException
