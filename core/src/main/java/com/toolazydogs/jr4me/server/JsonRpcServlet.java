@@ -144,6 +144,8 @@ public class JsonRpcServlet extends HttpServlet
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
+        response.setContentType("application/json");
+
         List<Reply> responses = new ArrayList<Reply>();
         try
         {
