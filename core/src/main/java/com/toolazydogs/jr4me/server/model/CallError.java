@@ -15,29 +15,32 @@
  */
 package com.toolazydogs.jr4me.server.model;
 
+import com.toolazydogs.jr4me.server.ErrorCodes;
+
+
 /**
  *
  */
 public class CallError extends Call
 {
-    private Error error;
+    private ErrorCodes error;
 
     public CallError()
     {
     }
 
-    public CallError(int id, int code, String message)
+    public CallError(ErrorCodes error, Integer id)
     {
         super(id);
-        this.error = new Error(code, message);
+        this.error = error;
     }
 
-    public Error getError()
+    public ErrorCodes getError()
     {
         return error;
     }
 
-    public void setError(Error error)
+    public void setError(ErrorCodes error)
     {
         this.error = error;
     }

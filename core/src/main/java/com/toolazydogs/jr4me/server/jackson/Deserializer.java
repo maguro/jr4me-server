@@ -28,7 +28,9 @@ import org.codehaus.jackson.map.deser.std.StdDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.toolazydogs.jr4me.server.ErrorCodes;
 import com.toolazydogs.jr4me.server.model.Call;
+import com.toolazydogs.jr4me.server.model.CallError;
 import com.toolazydogs.jr4me.server.model.CallParam;
 import com.toolazydogs.jr4me.server.model.CallParamArray;
 import com.toolazydogs.jr4me.server.model.CallParamMap;
@@ -99,12 +101,15 @@ public class Deserializer extends StdDeserializer<Call>
                     if (token != JsonToken.VALUE_STRING) throw context.wrongTokenException(parser, token, "Expected string value for JSON RPC method name");
                     method = parser.getText();
 
+                    MethodParametersDeserializer deserializer = map.get(method);
+                    if (deserializer == null) method = null;
+
                     LOG.trace("JSON RPC method {}", method);
                 }
                 else if ("id".equals(name))
                 {
                     token = parser.nextToken();
-                    if (token != JsonToken.VALUE_NUMBER_INT) throw context.wrongTokenException(parser, token, "Expected int value for JSON RPC id");
+                    if (token != JsonToken.VALUE_NUMBER_INT) throw context.weirdNumberException(Integer.class, "Expected int value for JSON RPC id");
                     id = parser.getIntValue();
 
                     LOG.trace("JSON RPC id {}", id);
@@ -130,7 +135,7 @@ public class Deserializer extends StdDeserializer<Call>
 
         LOG.trace("Completed parse of JSON RPC object");
 
-        if (p == null) throw context.instantiationException(Call.class, "Parameters were not set for JSON RPC");
+        if (p == null)  return new CallError(ErrorCodes.INVALID_PARAMS, id);
         if (p instanceof List)
         {
             call = new CallParamArray();
@@ -145,7 +150,7 @@ public class Deserializer extends StdDeserializer<Call>
         if (jsonrpc == null) throw context.instantiationException(Call.class, "Version was not set for JSON RPC");
         call.setJsonrpc(jsonrpc);
 
-        if (method == null) throw context.instantiationException(Call.class, "Method was not set for JSON RPC");
+        if (method == null) return new CallError(ErrorCodes.METHOD_NOT_FOUND, id);
         call.setMethod(method);
 
         call.setId(id);

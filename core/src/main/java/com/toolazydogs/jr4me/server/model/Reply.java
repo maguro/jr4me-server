@@ -20,4 +20,10 @@ package com.toolazydogs.jr4me.server.model;
  */
 public abstract class Reply
 {
+    private final String jsonrpc = "2.0";
+
+    public String getJsonrpc()
+    {
+        return jsonrpc;
+    }
 }

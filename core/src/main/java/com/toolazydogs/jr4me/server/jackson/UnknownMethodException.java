@@ -13,40 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jr4me.server.model;
+package com.toolazydogs.jr4me.server.jackson;
+
+import org.codehaus.jackson.JsonLocation;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  *
  */
-public class ReplyResult extends Reply
+public class UnknownMethodException extends JsonMappingException
 {
-    public Object result;
-    public Integer id;
-
-    public ReplyResult(Object result, Integer id)
+    public UnknownMethodException(String msg)
     {
-        this.result = result;
-        this.id = id;
+        super(msg);
     }
 
-    public Object getResult()
+    public UnknownMethodException(String msg, Throwable rootCause)
     {
-        return result;
+        super(msg, rootCause);
     }
 
-    public void setResult(Object result)
+    public UnknownMethodException(String msg, JsonLocation loc)
     {
-        this.result = result;
+        super(msg, loc);
     }
 
-    public Integer getId()
+    public UnknownMethodException(String msg, JsonLocation loc, Throwable rootCause)
     {
-        return id;
-    }
-
-    public void setId(Integer id)
-    {
-        this.id = id;
+        super(msg, loc, rootCause);
     }
 }

@@ -27,6 +27,7 @@ import java.io.InputStream;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
 
 
@@ -41,7 +42,7 @@ public class JsonRpcServletTest
         JsonRpcServlet servlet = new JsonRpcServlet();
         ServletConfig config = mock(ServletConfig.class);
 
-        when(config.getInitParameter(JsonRpcServlet.PACKAGES)).thenReturn("com.acme.service");
+        when(config.getInitParameter(JsonRpcServlet.PACKAGES)).thenReturn("com.acme.svc");
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getInputStream()).thenReturn(new ServletInputStream()
         {
@@ -66,7 +67,8 @@ public class JsonRpcServletTest
 
         servlet.init(config);
         servlet.doPost(request, response);
-        System.out.println(out.toString());
+
+        assertEquals(out.toString(), "{\"jsonrpc\":\"2.0\",\"result\":\"george:speedy\",\"id\":1}");
     }
 
     @Test
@@ -75,7 +77,7 @@ public class JsonRpcServletTest
         JsonRpcServlet servlet = new JsonRpcServlet();
         ServletConfig config = mock(ServletConfig.class);
 
-        when(config.getInitParameter(JsonRpcServlet.PACKAGES)).thenReturn("com.acme.service");
+        when(config.getInitParameter(JsonRpcServlet.PACKAGES)).thenReturn("com.acme.svc");
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getInputStream()).thenReturn(new ServletInputStream()
         {
@@ -100,6 +102,42 @@ public class JsonRpcServletTest
 
         servlet.init(config);
         servlet.doPost(request, response);
-        System.out.println(out.toString());
+
+        assertEquals(out.toString(), "{\"jsonrpc\":\"2.0\",\"result\":\"george:speedy\",\"id\":1}");
+    }
+
+    @Test
+    public void testError() throws Exception
+    {
+        JsonRpcServlet servlet = new JsonRpcServlet();
+        ServletConfig config = mock(ServletConfig.class);
+
+        when(config.getInitParameter(JsonRpcServlet.PACKAGES)).thenReturn("com.acme.svc");
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getInputStream()).thenReturn(new ServletInputStream()
+        {
+            InputStream in = new ByteArrayInputStream("{\"jsonrpc\": \"2.0\", \"method\": \"bad\", \"params\": [], \"id\": 1}".getBytes());
+
+            @Override
+            public int read() throws IOException
+            {
+                return in.read();
+            }
+        });
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        when(response.getOutputStream()).thenReturn(new ServletOutputStream()
+        {
+            @Override
+            public void write(int b) throws IOException
+            {
+                out.write(b);
+            }
+        });
+
+        servlet.init(config);
+        servlet.doPost(request, response);
+
+        assertEquals(out.toString(), "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-1,\"message\":\"Error\"},\"id\":1}");
     }
 }

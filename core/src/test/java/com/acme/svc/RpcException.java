@@ -13,40 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.toolazydogs.jr4me.server.model;
+package com.acme.svc;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.toolazydogs.jr4me.api.Jr4meException;
 
 
 /**
  *
  */
-public class ReplyResult extends Reply
+public class RpcException extends Jr4meException
 {
-    public Object result;
-    public Integer id;
-
-    public ReplyResult(Object result, Integer id)
+    public RpcException()
     {
-        this.result = result;
-        this.id = id;
-    }
-
-    public Object getResult()
-    {
-        return result;
-    }
-
-    public void setResult(Object result)
-    {
-        this.result = result;
-    }
-
-    public Integer getId()
-    {
-        return id;
-    }
-
-    public void setId(Integer id)
-    {
-        this.id = id;
+        super(-1, "Error");
     }
 }

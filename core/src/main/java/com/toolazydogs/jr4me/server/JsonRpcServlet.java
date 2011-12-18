@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Predicate;
+import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.module.SimpleModule;
@@ -183,13 +184,17 @@ public class JsonRpcServlet extends HttpServlet
                 }
             }
         }
+        catch (JsonProcessingException jpe)
+        {
+            responses.add(new ReplyError(ErrorCodes.INVALID_REQUEST, null));
+        }
         catch (Exception e)
         {
-            responses.add(new ReplyError(ErrorCodes.METHOD_ERROR, null));
+            responses.add(new ReplyError(ErrorCodes.INTERNAL_ERROR, null));
         }
         catch (Throwable t)
         {
-            responses.add(new ReplyError(ErrorCodes.METHOD_ERROR, null));
+            responses.add(new ReplyError(ErrorCodes.INTERNAL_ERROR, null));
         }
 
         if (responses.size() == 1)

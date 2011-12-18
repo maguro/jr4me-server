@@ -43,6 +43,12 @@ public class Rpc
     @Method(name = "register")
     public String fooMethod(@Param(name = "name") String param, @Param(name = "vehicle") Vehicle vehicle)
     {
-        return param + ":" + vehicle.getName() + ":" + engine.getHp();
+        return param + ":" + vehicle.getName() + (engine == null ? "" : ":" + engine.getHp());
+    }
+
+    @Method(name = "bad")
+    public String badMethod() throws RpcException
+    {
+        throw new RpcException();
     }
 }

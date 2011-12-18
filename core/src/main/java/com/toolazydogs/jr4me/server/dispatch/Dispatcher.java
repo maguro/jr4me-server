@@ -27,6 +27,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.toolazydogs.jr4me.api.Jr4meException;
 import com.toolazydogs.jr4me.server.ErrorCodes;
 import com.toolazydogs.jr4me.server.model.Reply;
 import com.toolazydogs.jr4me.server.model.ReplyError;
@@ -45,6 +46,10 @@ public class Dispatcher
 
     public Dispatcher(Class<?> declaringClass, Method method, List<String> names)
     {
+        assert declaringClass != null;
+        assert method != null;
+        assert names != null;
+
         this.declaringClass = declaringClass;
         this.method = method;
         this.names = names;
@@ -52,6 +57,8 @@ public class Dispatcher
 
     public Reply call(Object[] params, int id, BeanManager beanManager)
     {
+        LOG.trace("Calling {} for id {}", method.toString(), id);
+
         try
         {
             Object object = getContextualInstance(beanManager, declaringClass);
@@ -68,12 +75,22 @@ public class Dispatcher
         }
         catch (InvocationTargetException e)
         {
-            return new ReplyError(ErrorCodes.METHOD_INVOCATION_ERROR, id);
+            if (e.getTargetException() instanceof Jr4meException)
+            {
+                Jr4meException je = (Jr4meException)e.getCause();
+                return new ReplyError(je.getCode(), je.getMessage(), id);
+            }
+            else
+            {
+                return new ReplyError(ErrorCodes.METHOD_INVOCATION_ERROR, id);
+            }
         }
     }
 
     public Reply call(Map<String, Object> params, int id, BeanManager beanManager)
     {
+        LOG.trace("Calling {} for id {}", method.toString(), id);
+
         List<Object> list = new ArrayList<Object>(names.size());
         for (String name : names)
         {
@@ -96,7 +113,15 @@ public class Dispatcher
         }
         catch (InvocationTargetException e)
         {
-            return new ReplyError(ErrorCodes.METHOD_INVOCATION_ERROR, id);
+            if (e.getCause() instanceof Jr4meException)
+            {
+                Jr4meException je = (Jr4meException)e.getCause();
+                return new ReplyError(je.getCode(), je.getMessage(), id);
+            }
+            else
+            {
+                return new ReplyError(ErrorCodes.METHOD_INVOCATION_ERROR, id);
+            }
         }
     }
 

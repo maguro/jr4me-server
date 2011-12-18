@@ -24,7 +24,6 @@ import com.toolazydogs.jr4me.server.ErrorCodes;
  */
 public class ReplyError extends Reply
 {
-    private final String jsonrpc = "2.0";
     private Error error;
     public Integer id;
 
@@ -34,7 +33,12 @@ public class ReplyError extends Reply
 
     public ReplyError(ErrorCodes code, Integer id)
     {
-        this.error = new Error(code.getCode(), code.getMessage());
+        this(code.getCode(), code.getMessage(), id);
+    }
+
+    public ReplyError(int code, String message, Integer id)
+    {
+        this.error = new Error(code, message);
         this.id = id;
     }
 
@@ -42,11 +46,6 @@ public class ReplyError extends Reply
     {
         this.error = error;
         this.id = id;
-    }
-
-    public String getJsonrpc()
-    {
-        return jsonrpc;
     }
 
     public Error getError()
