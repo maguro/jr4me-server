@@ -36,6 +36,7 @@ import java.util.WeakHashMap;
 import com.google.common.base.Predicate;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.Version;
+import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.deser.std.StdDeserializer;
@@ -113,6 +114,19 @@ public class JsonRpcServlet extends HttpServlet
                 }
             }
 
+            Set<Class> mixinSpecified = new HashSet<Class>();
+            /**
+             * Scrape classes for annotations that declare Jackson MixIns
+             */
+            for (Class clazz : reflections.getTypesAnnotatedWith(JsonSubTypes.class))
+            {
+                JsonSubTypes mapException = (JsonSubTypes)clazz.getAnnotation(JsonSubTypes.class);
+                for (JsonSubTypes.Type type : mapException.value())
+                {
+                    mixinSpecified.add(type.value());
+                }
+            }
+
             /**
              * Scrape classes for annotations that declare codecs for JSON-RPC de/serialization.
              *
@@ -125,7 +139,7 @@ public class JsonRpcServlet extends HttpServlet
                 Codecs codecs = (Codecs)clazz.getAnnotation(Codecs.class);
                 for (Codecs.Codec codec : codecs.value())
                 {
-                    codecSpecified.add(codec.clazz());
+                    if (!mixinSpecified.contains(codec.clazz())) codecSpecified.add(codec.clazz());
 
                     if (codec.serializer() != null)
                     {
@@ -184,7 +198,9 @@ public class JsonRpcServlet extends HttpServlet
                             com.toolazydogs.jr4me.api.Param param = (Param)annotation;
 
                             /**
-                             * Types with explicitly declared codecs should not participate in the mixins
+                             * Types with explicitly declared codecs that are
+                             * not specified in Jackson mixins should not
+                             * participate in the mixins
                              */
                             if (!codecSpecified.contains(parameterType))
                             {

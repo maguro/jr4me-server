@@ -22,7 +22,6 @@ import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.DeserializationContext;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.deser.std.StdDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +44,6 @@ public class HorseDeserializer extends StdDeserializer<Horse>
     @Override
     public Horse deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException
     {
-        ObjectMapper mapper = (ObjectMapper)parser.getCodec();
-
         JsonToken token = parser.getCurrentToken();
         if (token == JsonToken.START_OBJECT)
         {
