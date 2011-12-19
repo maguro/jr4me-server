@@ -129,7 +129,7 @@ public class Deserializer extends StdDeserializer<Call>
             }
             else
             {
-                throw context.wrongTokenException(parser, token, "Expected fiend name or end of JSON object");
+                throw context.wrongTokenException(parser, token, "Expected field name or end of JSON object");
             }
         }
 

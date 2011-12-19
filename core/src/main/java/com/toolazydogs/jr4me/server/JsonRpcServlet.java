@@ -27,14 +27,18 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 import com.google.common.base.Predicate;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.Version;
+import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.deser.std.StdDeserializer;
 import org.codehaus.jackson.map.module.SimpleModule;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
@@ -45,6 +49,7 @@ import static org.reflections.util.FilterBuilder.prefix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.toolazydogs.jr4me.api.Codecs;
 import com.toolazydogs.jr4me.api.MapException;
 import com.toolazydogs.jr4me.api.Param;
 import com.toolazydogs.jr4me.server.dispatch.Dispatcher;
@@ -96,6 +101,9 @@ public class JsonRpcServlet extends HttpServlet
                             .setScanners(new MethodAnnotationsScanner().filterResultsBy(filter))
             );
 
+            /**
+             * Scrape classes for annotations that declare mappings of exceptions to JSON-RPC errors
+             */
             for (Class clazz : reflections.getTypesAnnotatedWith(com.toolazydogs.jr4me.api.MapException.class))
             {
                 MapException mapException = (MapException)clazz.getAnnotation(MapException.class);
@@ -105,12 +113,61 @@ public class JsonRpcServlet extends HttpServlet
                 }
             }
 
+            /**
+             * Scrape classes for annotations that declare codecs for JSON-RPC de/serialization.
+             *
+             * This module will be passed on, shared, to all the individual method object mappers.
+             */
+            Set<Class> codecSpecified = new HashSet<Class>();
+            SimpleModule methodModule = new SimpleModule("JsonRpcModule", new Version(1, 0, 0, null));
+            for (Class clazz : reflections.getTypesAnnotatedWith(com.toolazydogs.jr4me.api.Codecs.class))
+            {
+                Codecs codecs = (Codecs)clazz.getAnnotation(Codecs.class);
+                for (Codecs.Codec codec : codecs.value())
+                {
+                    codecSpecified.add(codec.clazz());
+
+                    if (codec.serializer() != null)
+                    {
+                        try
+                        {
+                            methodModule.addSerializer((JsonSerializer)codec.serializer().newInstance());
+                        }
+                        catch (InstantiationException e)
+                        {
+                            LOGGER.warn("Unable to instantiate {}", codec.serializer().getName());
+                        }
+                        catch (IllegalAccessException e)
+                        {
+                            LOGGER.warn("Unable to access {}", codec.serializer().getName());
+                        }
+                    }
+                    if (codec.deserializer() != null)
+                    {
+                        try
+                        {
+                            StdDeserializer deserializer = (StdDeserializer)codec.deserializer().newInstance();
+                            methodModule.addDeserializer(deserializer.getValueClass(), deserializer);
+                        }
+                        catch (InstantiationException e)
+                        {
+                            LOGGER.warn("Unable to instantiate {}", codec.deserializer().getName());
+                        }
+                        catch (IllegalAccessException e)
+                        {
+                            LOGGER.warn("Unable to access {}", codec.deserializer().getName());
+                        }
+                    }
+                }
+            }
+
             for (Method method : reflections.getMethodsAnnotatedWith(com.toolazydogs.jr4me.api.Method.class))
             {
                 Class<?> declaringClass = method.getDeclaringClass();
                 com.toolazydogs.jr4me.api.Method ann = method.getAnnotation(com.toolazydogs.jr4me.api.Method.class);
                 ObjectMapper methodMapper = new ObjectMapper();
                 methodMapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
+                methodMapper.registerModule(methodModule);
 
                 LOGGER.trace("Found annotated method {}", method.toString());
 
@@ -125,8 +182,15 @@ public class JsonRpcServlet extends HttpServlet
                         if (annotation instanceof com.toolazydogs.jr4me.api.Param)
                         {
                             com.toolazydogs.jr4me.api.Param param = (Param)annotation;
-                            methodMapper.getDeserializationConfig().addMixInAnnotations(parameterType, declaringClass);
-                            methodMapper.getSerializationConfig().addMixInAnnotations(parameterType, declaringClass);
+
+                            /**
+                             * Types with explicitly declared codecs should not participate in the mixins
+                             */
+                            if (!codecSpecified.contains(parameterType))
+                            {
+                                methodMapper.getDeserializationConfig().addMixInAnnotations(parameterType, declaringClass);
+                                methodMapper.getSerializationConfig().addMixInAnnotations(parameterType, declaringClass);
+                            }
 
                             paramDeserializers.add(JacksonUtils.createDeserializer(param.name(), parameterType, methodMapper));
                             name = param.name();
@@ -142,10 +206,11 @@ public class JsonRpcServlet extends HttpServlet
                     }
                 }
 
-                deserializers.add(new MethodParametersDeserializer(ann.name(), paramDeserializers.toArray(new ParamDeserializer[paramDeserializers.size()])));
+                String name = (ann.name().equals(com.toolazydogs.jr4me.api.Method.USE_METHOD_NAME) ? method.getName() : ann.name());
+                deserializers.add(new MethodParametersDeserializer(name, paramDeserializers.toArray(new ParamDeserializer[paramDeserializers.size()])));
                 mapper.getSerializationConfig().addMixInAnnotations(method.getReturnType(), declaringClass);
 
-                methods.put(ann.name(), new Dispatcher(declaringClass, method, names));
+                methods.put(name, new Dispatcher(declaringClass, method, names));
             }
         }
 

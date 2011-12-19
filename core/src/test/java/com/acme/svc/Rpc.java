@@ -20,10 +20,12 @@ import javax.inject.Inject;
 import com.acme.pojo.Car;
 import com.acme.pojo.Carriage;
 import com.acme.pojo.Engine;
+import com.acme.pojo.Horse;
 import com.acme.pojo.Vehicle;
 import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 
+import com.toolazydogs.jr4me.api.Codecs;
 import com.toolazydogs.jr4me.api.MapException;
 import com.toolazydogs.jr4me.api.Method;
 import com.toolazydogs.jr4me.api.Param;
@@ -37,6 +39,7 @@ import com.toolazydogs.jr4me.api.Param;
               property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = Car.class, name = "car"),
                @JsonSubTypes.Type(value = Carriage.class, name = "carriage")})
+@Codecs(@Codecs.Codec(clazz = Horse.class, serializer = HorseSerializer.class, deserializer = HorseDeserializer.class))
 @MapException(@MapException.Map(exception = NullPointerException.class, code = -2, message = "NPE"))
 public class Rpc
 {
@@ -58,5 +61,11 @@ public class Rpc
     public String npeMethod()
     {
         throw new NullPointerException();
+    }
+
+    @Method
+    public Horse create(@Param(name = "parent") Horse parent)
+    {
+        return Horse.fromString("child of " + parent.getName());
     }
 }
