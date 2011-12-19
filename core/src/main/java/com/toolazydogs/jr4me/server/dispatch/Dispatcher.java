@@ -55,7 +55,7 @@ public class Dispatcher
         this.names = names;
     }
 
-    public Reply call(Object[] params, int id, BeanManager beanManager)
+    public Reply call(Object[] params, int id, BeanManager beanManager) throws Throwable
     {
         LOG.trace("Calling {} for id {}", method.toString(), id);
 
@@ -82,12 +82,12 @@ public class Dispatcher
             }
             else
             {
-                return new ReplyError(ErrorCodes.METHOD_INVOCATION_ERROR, id);
+                throw e.getTargetException();
             }
         }
     }
 
-    public Reply call(Map<String, Object> params, int id, BeanManager beanManager)
+    public Reply call(Map<String, Object> params, int id, BeanManager beanManager) throws Throwable
     {
         LOG.trace("Calling {} for id {}", method.toString(), id);
 
@@ -120,7 +120,7 @@ public class Dispatcher
             }
             else
             {
-                return new ReplyError(ErrorCodes.METHOD_INVOCATION_ERROR, id);
+                throw e.getTargetException();
             }
         }
     }

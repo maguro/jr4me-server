@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import com.google.common.base.Predicate;
 import org.codehaus.jackson.JsonProcessingException;
@@ -44,6 +45,7 @@ import static org.reflections.util.FilterBuilder.prefix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.toolazydogs.jr4me.api.MapException;
 import com.toolazydogs.jr4me.api.Param;
 import com.toolazydogs.jr4me.server.dispatch.Dispatcher;
 import com.toolazydogs.jr4me.server.jackson.BatchCallDeserializer;
@@ -69,6 +71,7 @@ public class JsonRpcServlet extends HttpServlet
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonRpcServlet.class);
     public static String PACKAGES = "com.toolazydogs.jr4me.packages";
     private final ObjectMapper mapper = new ObjectMapper();
+    private final Map<Class, com.toolazydogs.jr4me.server.model.Error> errors = new WeakHashMap<Class, com.toolazydogs.jr4me.server.model.Error>();
     private final Map<String, Dispatcher> methods = new HashMap<String, Dispatcher>();
     @Inject private BeanManager beanManager;
 
@@ -92,6 +95,15 @@ public class JsonRpcServlet extends HttpServlet
                             .setUrls(forPackage(pkg))
                             .setScanners(new MethodAnnotationsScanner().filterResultsBy(filter))
             );
+
+            for (Class clazz : reflections.getTypesAnnotatedWith(com.toolazydogs.jr4me.api.MapException.class))
+            {
+                MapException mapException = (MapException)clazz.getAnnotation(MapException.class);
+                for (MapException.Map map : mapException.value())
+                {
+                    errors.put(map.exception(), new com.toolazydogs.jr4me.server.model.Error(map.code(), map.message()));
+                }
+            }
 
             for (Method method : reflections.getMethodsAnnotatedWith(com.toolazydogs.jr4me.api.Method.class))
             {
@@ -176,23 +188,25 @@ public class JsonRpcServlet extends HttpServlet
                         responses.add(new ReplyError(error.getError(), error.getId()));
                     }
                 }
-                catch (Exception e)
-                {
-                    responses.add(new ReplyError(ErrorCodes.METHOD_ERROR, c.getId()));
-                }
                 catch (Throwable t)
                 {
-                    responses.add(new ReplyError(ErrorCodes.METHOD_ERROR, c.getId()));
+                    boolean found = false;
+                    for (Class clazz : errors.keySet())
+                    {
+                        if (t.getClass() == clazz)
+                        {
+                            responses.add(new ReplyError(errors.get(clazz), c.getId()));
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) responses.add(new ReplyError(ErrorCodes.METHOD_ERROR, c.getId()));
                 }
             }
         }
         catch (JsonProcessingException jpe)
         {
             responses.add(new ReplyError(ErrorCodes.INVALID_REQUEST, null));
-        }
-        catch (Exception e)
-        {
-            responses.add(new ReplyError(ErrorCodes.INTERNAL_ERROR, null));
         }
         catch (Throwable t)
         {

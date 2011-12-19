@@ -24,6 +24,7 @@ import com.acme.pojo.Vehicle;
 import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 
+import com.toolazydogs.jr4me.api.MapException;
 import com.toolazydogs.jr4me.api.Method;
 import com.toolazydogs.jr4me.api.Param;
 
@@ -36,6 +37,7 @@ import com.toolazydogs.jr4me.api.Param;
               property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = Car.class, name = "car"),
                @JsonSubTypes.Type(value = Carriage.class, name = "carriage")})
+@MapException(@MapException.Map(exception = NullPointerException.class, code = -2, message = "NPE"))
 public class Rpc
 {
     @Inject Engine engine;
@@ -50,5 +52,11 @@ public class Rpc
     public String badMethod() throws RpcException
     {
         throw new RpcException();
+    }
+
+    @Method(name = "npe")
+    public String npeMethod()
+    {
+        throw new NullPointerException();
     }
 }
