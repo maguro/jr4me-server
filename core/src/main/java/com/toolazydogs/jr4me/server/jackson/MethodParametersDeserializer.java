@@ -25,6 +25,7 @@ import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.DeserializationContext;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.deser.std.StdDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,16 +41,19 @@ public class MethodParametersDeserializer extends StdDeserializer<Object>
 {
     static final Logger LOG = LoggerFactory.getLogger(MethodParametersDeserializer.class);
     private final String method;
+    private final ObjectMapper mapper;
     private final ParamDeserializer[] array;
     private final Map<String, ParamDeserializer> map = new HashMap<String, ParamDeserializer>();
 
-    public MethodParametersDeserializer(String method, ParamDeserializer[] deserializers)
+    public MethodParametersDeserializer(String method, ObjectMapper mapper, ParamDeserializer[] deserializers)
     {
         super(Object.class);
 
         assert method != null;
+        assert mapper != null;
 
         this.method = method;
+        this.mapper = mapper;
         this.array = new ParamDeserializer[deserializers.length];
         System.arraycopy(deserializers, 0, this.array, 0, deserializers.length);
 
@@ -66,6 +70,11 @@ public class MethodParametersDeserializer extends StdDeserializer<Object>
     public String getMethod()
     {
         return method;
+    }
+
+    public ObjectMapper getMapper()
+    {
+        return mapper;
     }
 
     @SuppressWarnings("unchecked")

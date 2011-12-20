@@ -24,6 +24,7 @@ import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.DeserializationContext;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.deser.std.StdDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ public class Deserializer extends StdDeserializer<Call>
 {
     static final Logger LOG = LoggerFactory.getLogger(Deserializer.class);
     private final Map<String, MethodParametersDeserializer> map = new HashMap<String, MethodParametersDeserializer>();
+    private final static ThreadLocal<ObjectMapper> MAPPER_THREAD_LOCAL = new ThreadLocal<ObjectMapper>();
 
     public Deserializer(MethodParametersDeserializer[] deserializers)
     {
@@ -56,6 +58,11 @@ public class Deserializer extends StdDeserializer<Call>
         }
 
         LOG.trace("Configured with {} deserializers", deserializers.length);
+    }
+
+    public static ObjectMapper getMapper()
+    {
+        return MAPPER_THREAD_LOCAL.get();
     }
 
     @SuppressWarnings("unchecked")
@@ -118,7 +125,16 @@ public class Deserializer extends StdDeserializer<Call>
                 {
                     MethodParametersDeserializer deserializer = map.get(method);
                     if (deserializer == null) throw context.weirdStringException(CallParamMap.class, "Method " + method + " not a registered method");
-                    p = deserializer.deserialize(parser, context);
+
+                    MAPPER_THREAD_LOCAL.set(deserializer.getMapper());
+                    try
+                    {
+                        p = deserializer.deserialize(parser, context);
+                    }
+                    finally
+                    {
+                        MAPPER_THREAD_LOCAL.set(null);
+                    }
                 }
                 else
                 {
@@ -135,7 +151,7 @@ public class Deserializer extends StdDeserializer<Call>
 
         LOG.trace("Completed parse of JSON RPC object");
 
-        if (p == null)  return new CallError(ErrorCodes.INVALID_PARAMS, id);
+        if (p == null) return new CallError(ErrorCodes.INVALID_PARAMS, id);
         if (p instanceof List)
         {
             call = new CallParamArray();

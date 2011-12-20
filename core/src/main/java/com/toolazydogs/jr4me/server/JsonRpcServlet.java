@@ -60,6 +60,7 @@ import com.toolazydogs.jr4me.server.jackson.Deserializer;
 import com.toolazydogs.jr4me.server.jackson.JacksonUtils;
 import com.toolazydogs.jr4me.server.jackson.MethodParametersDeserializer;
 import com.toolazydogs.jr4me.server.jackson.ParamDeserializer;
+import com.toolazydogs.jr4me.server.jackson.Serializer;
 import com.toolazydogs.jr4me.server.model.BatchCall;
 import com.toolazydogs.jr4me.server.model.Call;
 import com.toolazydogs.jr4me.server.model.CallError;
@@ -223,7 +224,7 @@ public class JsonRpcServlet extends HttpServlet
                 }
 
                 String name = (ann.name().equals(com.toolazydogs.jr4me.api.Method.USE_METHOD_NAME) ? method.getName() : ann.name());
-                deserializers.add(new MethodParametersDeserializer(name, paramDeserializers.toArray(new ParamDeserializer[paramDeserializers.size()])));
+                deserializers.add(new MethodParametersDeserializer(name, methodMapper, paramDeserializers.toArray(new ParamDeserializer[paramDeserializers.size()])));
                 mapper.getSerializationConfig().addMixInAnnotations(method.getReturnType(), declaringClass);
 
                 methods.put(name, new Dispatcher(declaringClass, method, names));
@@ -294,13 +295,21 @@ public class JsonRpcServlet extends HttpServlet
             responses.add(new ReplyError(ErrorCodes.INTERNAL_ERROR, null));
         }
 
-        if (responses.size() == 1)
+        Serializer.setMapper(mapper);
+        try
         {
-            mapper.writeValue(response.getOutputStream(), responses.get(0));
+            if (responses.size() == 1)
+            {
+                mapper.writeValue(response.getOutputStream(), responses.get(0));
+            }
+            else
+            {
+                mapper.writeValue(response.getOutputStream(), responses.toArray(new Reply[responses.size()]));
+            }
         }
-        else
+        finally
         {
-            mapper.writeValue(response.getOutputStream(), responses.toArray(new Reply[responses.size()]));
+            Serializer.setMapper(null);
         }
     }
 }

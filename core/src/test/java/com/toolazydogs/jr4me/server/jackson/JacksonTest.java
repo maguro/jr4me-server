@@ -15,9 +15,15 @@
  */
 package com.toolazydogs.jr4me.server.jackson;
 
+import javax.management.Attribute;
+import java.util.Arrays;
+import java.util.Collections;
+
 import com.acme.pojo.Car;
 import com.acme.pojo.Horse;
 import com.acme.pojo.Vehicle;
+import com.acme.svc.AttributeDeserializer;
+import com.acme.svc.AttributeSerializer;
 import com.acme.svc.HorseDeserializer;
 import com.acme.svc.HorseSerializer;
 import com.acme.svc.Rpc;
@@ -142,6 +148,28 @@ public class JacksonTest
     }
 
     @Test
+    public void testAttributeCodec() throws Exception
+    {
+        BatchCall calls = mapper.readValue("{\"jsonrpc\": \"2.0\", \"method\": \"set\", \"params\": [{\"name\":\"Flicka\", \"value\":[\"Foo\", {\"car\":\"cdr\"}]}], \"id\": 1}",
+                                           BatchCall.class);
+        assertNotNull(calls);
+        assertEquals(calls.getCalls().length, 1);
+
+        CallParamArray arrayCall = (CallParamArray)calls.getCalls()[0];
+        assertNotNull(arrayCall);
+        assertEquals(arrayCall.getJsonrpc(), "2.0");
+        assertEquals(arrayCall.getMethod(), "set");
+        assertEquals(arrayCall.getId(), Integer.valueOf(1));
+        assertNotNull(arrayCall.getParams());
+        assertEquals(arrayCall.getParams().length, 1);
+        assertEquals(arrayCall.getParams()[0], new Attribute("Flicka", Arrays.asList(new Object[]{"Foo", Collections.singletonMap("car", "cdr")})));
+
+        Serializer.setMapper(mapper);
+        System.out.println(mapper.writeValueAsString(calls));
+        Serializer.setMapper(null);
+    }
+
+    @Test
     public void testBadCalls() throws Exception
     {
         try
@@ -194,22 +222,36 @@ public class JacksonTest
         ObjectMapper methodMapper = new ObjectMapper();
         methodMapper.registerModule(new SimpleModule("JsonRpcModule", new Version(1, 0, 0, null))
                                             .addDeserializer(Horse.class, new HorseDeserializer())
-                                            .addSerializer(new HorseSerializer()));
+                                            .addSerializer(new HorseSerializer())
+                                            .addDeserializer(Attribute.class, new AttributeDeserializer())
+                                            .addSerializer(new AttributeSerializer()));
         methodMapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
         methodMapper.getDeserializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
         methodMapper.getSerializationConfig().addMixInAnnotations(Vehicle.class, Rpc.class);
 
-        MethodParametersDeserializer s = new MethodParametersDeserializer("subtract", new ParamDeserializer[]{new ParamDeserializerString("name", methodMapper),
-                                                                                                              new ParamDeserializerObject("vehicle", Vehicle.class, methodMapper)});
-        MethodParametersDeserializer a = new MethodParametersDeserializer("add", new ParamDeserializer[]{new ParamDeserializerString("name", methodMapper),
-                                                                                                         new ParamDeserializerObject("vehicle", Vehicle.class, methodMapper)});
-        MethodParametersDeserializer c = new MethodParametersDeserializer("create", new ParamDeserializer[]{new ParamDeserializerObject("parent", Horse.class, methodMapper)});
+        MethodParametersDeserializer sub = new MethodParametersDeserializer("subtract",
+                                                                            methodMapper,
+                                                                            new ParamDeserializer[]{new ParamDeserializerString("name", methodMapper),
+                                                                                                    new ParamDeserializerObject("vehicle", Vehicle.class, methodMapper)});
+        MethodParametersDeserializer add = new MethodParametersDeserializer("add",
+                                                                            methodMapper,
+                                                                            new ParamDeserializer[]{new ParamDeserializerString("name", methodMapper),
+                                                                                                    new ParamDeserializerObject("vehicle", Vehicle.class, methodMapper)});
+        MethodParametersDeserializer c = new MethodParametersDeserializer("create",
+                                                                          methodMapper,
+                                                                          new ParamDeserializer[]{new ParamDeserializerObject("parent", Horse.class, methodMapper)});
+
+        MethodParametersDeserializer set = new MethodParametersDeserializer("set",
+                                                                            methodMapper,
+                                                                            new ParamDeserializer[]{new ParamDeserializerObject("attribute", Attribute.class, methodMapper)});
 
         mapper.registerModule(new SimpleModule("JsonRpcModule", new Version(1, 0, 0, null))
-                                      .addDeserializer(Call.class, new Deserializer(new MethodParametersDeserializer[]{s, a, c}))
+                                      .addDeserializer(Call.class, new Deserializer(new MethodParametersDeserializer[]{sub, add, c, set}))
                                       .addDeserializer(BatchCall.class, new BatchCallDeserializer())
                                       .addDeserializer(Horse.class, new HorseDeserializer())
-                                      .addSerializer(new HorseSerializer()));
+                                      .addSerializer(new HorseSerializer())
+                                      .addDeserializer(Attribute.class, new AttributeDeserializer())
+                                      .addSerializer(new AttributeSerializer()));
     }
 
     @AfterTest

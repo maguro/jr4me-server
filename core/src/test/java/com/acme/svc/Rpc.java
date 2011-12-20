@@ -16,6 +16,7 @@
 package com.acme.svc;
 
 import javax.inject.Inject;
+import javax.management.Attribute;
 
 import com.acme.pojo.Car;
 import com.acme.pojo.Carriage;
@@ -39,7 +40,8 @@ import com.toolazydogs.jr4me.api.Param;
               property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = Car.class, name = "car"),
                @JsonSubTypes.Type(value = Carriage.class, name = "carriage")})
-@Codecs(@Codecs.Codec(clazz = Horse.class, serializer = HorseSerializer.class, deserializer = HorseDeserializer.class))
+@Codecs({@Codecs.Codec(clazz = Horse.class, serializer = HorseSerializer.class, deserializer = HorseDeserializer.class),
+         @Codecs.Codec(clazz = Attribute.class, serializer = AttributeSerializer.class, deserializer = AttributeDeserializer.class)})
 @MapException(@MapException.Map(exception = NullPointerException.class, code = -2, message = "NPE"))
 public class Rpc
 {
@@ -67,5 +69,11 @@ public class Rpc
     public Horse create(@Param(name = "parent") Horse parent)
     {
         return Horse.fromString("child of " + parent.getName());
+    }
+
+    @Method
+    public Attribute set(@Param(name = "attribute") Attribute attribute)
+    {
+        return attribute;
     }
 }
