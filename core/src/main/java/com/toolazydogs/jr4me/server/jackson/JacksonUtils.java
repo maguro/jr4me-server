@@ -28,9 +28,13 @@ public class JacksonUtils
     public static ParamDeserializer createDeserializer(String name, Class<?> parameterType, ObjectMapper mapper)
     {
         if (Double.class == parameterType) return new ParamDeserializerDouble(name, mapper);
+        if (Double.TYPE == parameterType) return new ParamDeserializerDouble(name, mapper);
         if (Float.class == parameterType) return new ParamDeserializerFloat(name, mapper);
+        if (Float.TYPE == parameterType) return new ParamDeserializerFloat(name, mapper);
         if (Integer.class == parameterType) return new ParamDeserializerInteger(name, mapper);
+        if (Integer.TYPE == parameterType) return new ParamDeserializerInteger(name, mapper);
         if (Long.class == parameterType) return new ParamDeserializerLong(name, mapper);
+        if (Long.TYPE == parameterType) return new ParamDeserializerLong(name, mapper);
         if (String.class == parameterType) return new ParamDeserializerString(name, mapper);
         return new ParamDeserializerObject(name, parameterType, mapper);
     }
