@@ -87,6 +87,8 @@ public class JsonRpcServlet extends HttpServlet
     {
         super.init(config);
 
+        SimpleModule module = new SimpleModule("JsonRpcModule", new Version(1, 0, 0, null));
+        mapper.registerModule(module);
         mapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
 
         List<MethodParametersDeserializer> deserializers = new ArrayList<MethodParametersDeserializer>();
@@ -146,7 +148,7 @@ public class JsonRpcServlet extends HttpServlet
                     {
                         try
                         {
-                            methodModule.addSerializer((JsonSerializer)codec.serializer().newInstance());
+                            module.addSerializer((JsonSerializer)codec.serializer().newInstance());
                         }
                         catch (InstantiationException e)
                         {
@@ -231,8 +233,7 @@ public class JsonRpcServlet extends HttpServlet
             }
         }
 
-        mapper.registerModule(new SimpleModule("JsonRpcModule", new Version(1, 0, 0, null))
-                                      .addDeserializer(Call.class, new Deserializer(deserializers.toArray(new MethodParametersDeserializer[deserializers.size()])))
+        mapper.registerModule(module.addDeserializer(Call.class, new Deserializer(deserializers.toArray(new MethodParametersDeserializer[deserializers.size()])))
                                       .addDeserializer(BatchCall.class, new BatchCallDeserializer()));
     }
 
