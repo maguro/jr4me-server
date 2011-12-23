@@ -36,6 +36,7 @@ public class JacksonUtils
         if (Long.class == parameterType) return new ParamDeserializerLong(name, mapper);
         if (Long.TYPE == parameterType) return new ParamDeserializerLong(name, mapper);
         if (String.class == parameterType) return new ParamDeserializerString(name, mapper);
+        if (parameterType.isArray()) return new ParamDeserializerArray(name, parameterType, mapper);
         return new ParamDeserializerObject(name, parameterType, mapper);
     }
 }
