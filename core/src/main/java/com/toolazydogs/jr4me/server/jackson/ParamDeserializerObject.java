@@ -43,6 +43,7 @@ public class ParamDeserializerObject extends ParamDeserializer
     public Object deserialize(JsonParser parser, DeserializationContext context) throws IOException
     {
         JsonToken token = parser.nextToken();
+        if (token == JsonToken.VALUE_NULL) return null;
         if (token != JsonToken.START_OBJECT) throw context.wrongTokenException(parser, token, "Expected object for JSON RPC parameter " + getKey());
 
         Object value = getMapper().readValue(parser, clazz);
