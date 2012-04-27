@@ -44,7 +44,7 @@ public class AnnotationScanningTest
             pkg = pkg.trim();
             Reflections reflections = new Reflections(
                     new ConfigurationBuilder()
-                            .setUrls(forPackage(pkgs))
+                            .setUrls(forPackage(pkg))
                             .setScanners(new MethodAnnotationsScanner().filterResultsBy(filter))
             );
 
