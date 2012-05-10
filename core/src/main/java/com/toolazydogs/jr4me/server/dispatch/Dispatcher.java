@@ -146,4 +146,10 @@ public class Dispatcher
         }
         return result;
     }
+
+    @Override
+    public String toString()
+    {
+        return method.toString();
+    }
 }
