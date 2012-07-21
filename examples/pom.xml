@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>com.toolazydogs.jr4me.examples</groupId>
-    <artifactId>project</artifactId>
+    <artifactId>examples</artifactId>
     <name>JSON-RPC for me :: Examples</name>
     <packaging>pom</packaging>
 
@@ -21,8 +21,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <jettyVersion>6.1.21</jettyVersion>
+        <jacksonVersion>1.9.2</jacksonVersion>
         <slf4jVersion>1.6.4</slf4jVersion>
+        <tomcatVersion>7.0.26</tomcatVersion>
+        <weldVersion>1.1.8.Final</weldVersion>
     </properties>
 
     <dependencyManagement>
@@ -41,48 +43,51 @@
             </dependency>
 
             <dependency>
-                <groupId>javax.enterprise</groupId>
-                <artifactId>cdi-api</artifactId>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-jcdi_1.0_spec</artifactId>
                 <version>1.0</version>
             </dependency>
 
-
             <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
-                <version>2.5</version>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-jsp_2.2_spec</artifactId>
+                <version>1.1</version>
             </dependency>
 
             <dependency>
-                <groupId>javax.servlet.jsp</groupId>
-                <artifactId>jsp-api</artifactId>
-                <version>2.2</version>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-servlet_3.0_spec</artifactId>
+                <version>1.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-core-asl</artifactId>
-                <version>1.9.2</version>
+                <version>${jacksonVersion}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-mapper-asl</artifactId>
-                <version>1.9.2</version>
+                <version>${jacksonVersion}</version>
             </dependency>
-
 
             <dependency>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>jetty-plus</artifactId>
-                <version>${jettyVersion}</version>
+                <groupId>org.jboss.seam.spring</groupId>
+                <artifactId>seam-spring-core</artifactId>
+                <version>3.1.0.Final</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.jboss.weld</groupId>
+                <artifactId>weld-core</artifactId>
+                <version>${weldVersion}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.jboss.weld.servlet</groupId>
-                <artifactId>weld-servlet</artifactId>
-                <version>1.1.4.Final</version>
+                <artifactId>weld-servlet-core</artifactId>
+                <version>${weldVersion}</version>
             </dependency>
 
             <dependency>
@@ -95,6 +100,12 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4jVersion}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.0.3</version>
             </dependency>
 
         </dependencies>

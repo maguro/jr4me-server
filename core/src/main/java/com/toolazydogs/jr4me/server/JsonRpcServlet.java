@@ -178,9 +178,19 @@ public class JsonRpcServlet extends HttpServlet
                 }
             }
 
+            Set<Class<?>> classes = new HashSet<Class<?>>();
+            Set<Class<?>> interfaces = new HashSet<Class<?>>();
             for (Method method : reflections.getMethodsAnnotatedWith(com.toolazydogs.jr4me.api.Method.class))
             {
                 Class<?> declaringClass = method.getDeclaringClass();
+                if (declaringClass.isInterface())
+                {
+                    for (Class<?> subType : reflections.getSubTypesOf(declaringClass))
+                    {
+                        declaringClass = subType;
+                        break;
+                    }
+                }
                 com.toolazydogs.jr4me.api.Method ann = method.getAnnotation(com.toolazydogs.jr4me.api.Method.class);
                 ObjectMapper methodMapper = new ObjectMapper();
                 methodMapper.setPropertyNamingStrategy(new CamelCaseNamingStrategy());
@@ -312,5 +322,12 @@ public class JsonRpcServlet extends HttpServlet
         {
             Serializer.setMapper(null);
         }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        if (request == null || request.getPathInfo() == null || !request.getPathInfo().startsWith("/help"))
+            response.sendRedirect("/help");
     }
 }

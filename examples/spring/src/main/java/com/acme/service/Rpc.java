@@ -15,34 +15,23 @@
  */
 package com.acme.service;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
-import com.acme.model.Car;
-import com.acme.model.Carriage;
 import com.acme.model.Engine;
 import com.acme.model.Vehicle;
-import org.cdisource.springintegration.Spring;
-import org.codehaus.jackson.annotate.JsonSubTypes;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
-
-import com.toolazydogs.jr4me.api.Method;
-import com.toolazydogs.jr4me.api.Param;
 
 
 /**
  *
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-              include = JsonTypeInfo.As.PROPERTY,
-              property = "type")
-@JsonSubTypes({@JsonSubTypes.Type(value = Car.class, name = "car"),
-               @JsonSubTypes.Type(value = Carriage.class, name = "carriage")})
-public class Rpc
+@RequestScoped
+public class Rpc implements FooBar
 {
-    @Inject @Spring(name = "engine") Engine engine;
+    @Inject
+    Engine engine;
 
-    @Method(name = "register")
-    public String fooMethod(@Param(name = "name") String param, @Param(name = "vehicle") Vehicle vehicle)
+    public String fooMethod(String param, Vehicle vehicle)
     {
         return param + ":" + vehicle.getName() + ":" + engine.getHp();
     }

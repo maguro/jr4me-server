@@ -16,18 +16,18 @@
 package com.acme.model;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 
 /**
  *
  */
-@Named
 public class Car extends Vehicle
 {
     private String make;
     private String model;
-    @Inject Engine engine;
+
+    @Inject
+    Engine engine;
 
     public Car()
     {

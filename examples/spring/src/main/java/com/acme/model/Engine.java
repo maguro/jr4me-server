@@ -15,8 +15,7 @@
  */
 package com.acme.model;
 
-import javax.enterprise.inject.spi.BeanManager;
-import javax.inject.Inject;
+import javax.inject.Named;
 
 
 /**
@@ -25,11 +24,10 @@ import javax.inject.Inject;
 public class Engine
 {
     private int hp;
-    @Inject private BeanManager beanManager;
 
     public Engine()
     {
-        hp = 230;
+        hp = 414;
     }
 
     public Engine(int hp)
